@@ -8,7 +8,7 @@ int PIN_LORA_DIO1 = 33;
 int PIN_LORA_DIO2 = 32;
 
 /** Lora class  */
-SX1276 lora = new Module(PIN_LORA_CS, PIN_LORA_DIO0, PIN_LORA_RST);
+SX1276 lora = new Module(PIN_LORA_CS, PIN_LORA_DIO0, PIN_LORA_RST, PIN_LORA_DIO1);
 
 // disable interrupt when it's not needed
 volatile bool enableInterrupt = true;
@@ -531,7 +531,7 @@ void receiveData(void)
 				(thisMsg->nodes[numSubs - 1][3] != 0xFF) ||
 				(thisMsg->nodes[numSubs - 1][4] != 0xAA))
 			{
-				myLog_e("Invalid map, end marker is missing from %08X", thisMsg->from);
+				myLog_w("Invalid map, end marker is missing from %08X", thisMsg->from);
 				xSemaphoreGive(accessNodeList);
 				return;
 			}

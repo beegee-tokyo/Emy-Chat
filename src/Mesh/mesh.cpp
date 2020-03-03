@@ -214,9 +214,6 @@ void meshTask(void *pvParameters)
 	// Start waiting for data package
 	Radio.Standby();
 
-	SX126xSetDioIrqParams(IRQ_RADIO_ALL,
-						  IRQ_RADIO_ALL,
-						  IRQ_RADIO_NONE, IRQ_RADIO_NONE);
 	Radio.Rx(0);
 
 	time_t txTimeout = millis();
@@ -298,7 +295,7 @@ void meshTask(void *pvParameters)
 		}
 
 		// Check if loraState is stuck in MESH_TX
-		if ((loraState == MESH_TX) && ((millis() - txTimeout) > 2000))
+		if ((loraState == MESH_TX) && ((millis() - txTimeout) > 7500))
 		{
 			Radio.Standby();
 			Radio.Rx(0);
@@ -333,10 +330,11 @@ void meshTask(void *pvParameters)
 					loraState = MESH_TX;
 
 					Radio.Standby();
-					SX126xSetCadParams(LORA_CAD_08_SYMBOL, LORA_SPREADING_FACTOR + 13, 10, LORA_CAD_ONLY, 0);
-					SX126xSetDioIrqParams(IRQ_RADIO_ALL,
-										  IRQ_RADIO_ALL,
-										  IRQ_RADIO_NONE, IRQ_RADIO_NONE);
+					Radio.SetCadParams(LORA_CAD_08_SYMBOL, LORA_SPREADING_FACTOR + 13, 10, LORA_CAD_ONLY, 0);
+					// SX126xSetCadParams(LORA_CAD_08_SYMBOL, LORA_SPREADING_FACTOR + 13, 10, LORA_CAD_ONLY, 0);
+					// SX126xSetDioIrqParams(IRQ_RADIO_ALL,
+					// 					  IRQ_RADIO_ALL,
+					// 					  IRQ_RADIO_NONE, IRQ_RADIO_NONE);
 					Radio.StartCad();
 					txTimeout = millis();
 				}
@@ -788,7 +786,10 @@ void OnCadDone(bool cadResult)
 		}
 		else
 		{
+			// Wait a little bit before retrying
+			delay(250);
 			Radio.Standby();
+			Radio.SetCadParams(LORA_CAD_08_SYMBOL, LORA_SPREADING_FACTOR + 13, 10, LORA_CAD_ONLY, 0);
 			Radio.StartCad();
 		}
 	}

@@ -13,7 +13,7 @@ It is inspired by **[DisasterRadio](https://github.com/sudomesh/disaster-radio)*
 
 ## Target hardware:
 The code is written to work on either an ESP32 or a nRF52 microcontroller and is not compatible with other microcontrollers. The LoRa transceivers used are [Semtech SX1262 transceivers](https://www.semtech.com/products/wireless-rf/lora-transceivers/sx1262). They are either connected to the microcontroller as a Adafruit Feather compatible breakout ([Circuitrocks Alora RFM1262](https://circuit.rocks/product:2685)) or integrated into a SOC together with a Nordic nRF52 ([Insight ISP4520](https://www.insightsip.com/products/combo-smart-modules/isp4520)).    
-Using Jan Gromes [RadioLib](https://github.com/jgromes/RadioLib) this chat node SW works as well with RFM95 modules. 
+Using Jan Gromes [RadioLib](https://github.com/jgromes/RadioLib) this chat node SW works as well with RFM95 modules. I tested it on a [Sparkfun LoRa Gateway - 1-channel](https://www.sparkfun.com/products/15006) board which uses a RFM95W LoRa modem.
 
 ## UI options
 For now, the software supports 3 user interfaces.
@@ -51,7 +51,7 @@ Here is a list of the important defines:
 - -DIS_WROVER=1
   - Used to select a specific setup for a ESP32-Wrover board.
 - -DUSE_RFM95=1
-  - Selects the use of an RFM95 module instead of the SX1262 chips. Code support is at the moment only for the [Sparkfun Lora Gateway 1 channel](https://www.sparkfun.com/products/15006) board implemented.
+  - Selects the use of an RFM95 module instead of the SX1262 chips. Code is at the moment only tested with the [Sparkfun Lora Gateway 1 channel](https://www.sparkfun.com/products/15006) board implemented.
 Other defines used in the code, but setup by the PlatformIO packages
 - ISP4520
   - Set for Insight ISP4520 boards

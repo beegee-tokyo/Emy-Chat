@@ -370,7 +370,7 @@ void sendLoRaData(uint32_t receiver, uint8_t type, char *data, size_t len)
 			outData.dest = getNextBroadcastID();
 			outData.from = outData.orig = deviceID;
 			outData.type = LORA_BROADCAST;
-			myLog_e("Sending chat as broadcast");
+			myLog_d("Sending chat as broadcast");
 		}
 		else
 		{

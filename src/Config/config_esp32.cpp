@@ -18,9 +18,14 @@ bool getNickname(char *name)
 	{
 		myLog_e("No name saved > %s", name);
 		name[0] = 0;
+		if (!preferences.getBool("ok", false));
+		{
+			preferences.end();
+			myLog_e("nvs_flash_init: %d", nvs_flash_init());
+			preferences.begin("my-app", false);
+			preferences.putBool("ok", true);
+		}
 		preferences.end();
-		myLog_e("nvs_flash_init: %d", nvs_flash_init());
-
 		return false;
 	}
 	myLog_d("Got username %s", name);

@@ -2,8 +2,13 @@
 
 /** The list with all known nodes */
 nodesList *nodesMap;
+/** Index to the first free node entry */
+int nodesMapIndex = 0;
 
+/** The list with all known names */
 namesList *namesMap;
+/** Index to the first free name entry */
+int namesListIndex = 0;
 
 /** Timeout to remove unresponsive nodes */
 time_t inActiveTimeout = 120000;
@@ -16,9 +21,13 @@ time_t inActiveTimeout = 120000;
 void deleteRoute(uint8_t index)
 {
 	// Delete a route by copying following routes on top of it
+	uint32_t nodeToDelete = nodesMap[index].nodeId;
 	memcpy(&nodesMap[index], &nodesMap[index + 1],
 		   sizeof(nodesList) * (_numOfNodes - index - 1));
-	nodesMap[_numOfNodes - 1].nodeId = 0;
+	nodesMapIndex--;
+	nodesMap[nodesMapIndex].nodeId = 0;
+	// Delete the name as well
+	deleteNodeName(nodeToDelete);
 }
 
 /**
@@ -105,26 +114,35 @@ boolean addNode(uint32_t id, uint32_t hop, uint8_t hopNum)
 		}
 	}
 
-	// Find unused node entry
-	int newEntry = 0;
-	for (newEntry = 0; newEntry < _numOfNodes; newEntry++)
-	{
-		if (nodesMap[newEntry].nodeId == 0)
-		{
-			// Found an empty slot
-			break;
-		}
-	}
+	// // Find unused node entry
+	// int newEntry = 0;
+	// for (newEntry = 0; newEntry < _numOfNodes; newEntry++)
+	// {
+	// 	if (nodesMap[newEntry].nodeId == 0)
+	// 	{
+	// 		// Found an empty slot
+	// 		break;
+	// 	}
+	// }
 
-	if (newEntry == _numOfNodes)
+	// if (newEntry == _numOfNodes)
+	// {
+	// 	// Map is full, remove oldest entry
+	// 	deleteRoute(0);
+	// 	listChanged = true;
+	// }
+
+	if (nodesMapIndex == _numOfNodes)
 	{
-		// Map is full, remove oldest entry
+		// Map is full, remove the oldest entry
 		deleteRoute(0);
 		listChanged = true;
 	}
 
 	// New node entry
-	memcpy(&nodesMap[newEntry], &_newNode, sizeof(nodesList));
+	memcpy(&nodesMap[nodesMapIndex], &_newNode, sizeof(nodesList));
+	nodesMapIndex++;
+
 	listChanged = true;
 	myLog_d("Added node %lX with hop %lX and num hops %d", id, hop, hopNum);
 
@@ -158,6 +176,7 @@ void clearSubs(uint32_t id)
 
 /**
  * Check the list for nodes that did not be refreshed within a given timeout
+ * Checks as well for nodes that have "impossible" number of hops (> number of max nodes)
  * @return bool
  * 			True if no changes were done, false if any node was removed
  */
@@ -172,10 +191,10 @@ bool cleanMap(void)
 			// Last entry found
 			break;
 		}
-		if ((millis() > (nodesMap[idx].timeStamp + inActiveTimeout)))
+		if (((millis() > (nodesMap[idx].timeStamp + inActiveTimeout))) || (nodesMap[idx].numHops > 48))
 		{
 			// Node was not refreshed for inActiveTimeout milli seconds
-			myLog_w("Node %lX with hop %lX timed out", nodesMap[idx].nodeId, nodesMap[idx].firstHop);
+			myLog_e("Node %lX with hop %lX timed out or has too many hops", nodesMap[idx].nodeId, nodesMap[idx].firstHop);
 			if (nodesMap[idx].firstHop == 0)
 			{
 				clearSubs(nodesMap[idx].nodeId);
@@ -254,19 +273,20 @@ uint8_t nodeMap(uint8_t nodes[][5])
  */
 uint8_t numOfNodes(void)
 {
-	uint8_t subsNameIndex = 0;
+	return nodesMapIndex - 1;
+	// uint8_t subsNameIndex = 0;
 
-	for (int idx = 0; idx < _numOfNodes; idx++)
-	{
-		if (nodesMap[idx].nodeId == 0)
-		{
-			// Last node found
-			break;
-		}
-		subsNameIndex++;
-	}
+	// for (int idx = 0; idx < _numOfNodes; idx++)
+	// {
+	// 	if (nodesMap[idx].nodeId == 0)
+	// 	{
+	// 		// Last node found
+	// 		break;
+	// 	}
+	// 	subsNameIndex++;
+	// }
 
-	return subsNameIndex;
+	// return subsNameIndex;
 }
 
 /**
@@ -304,7 +324,7 @@ bool getNode(uint8_t nodeNum, uint32_t &nodeId, uint32_t &firstHop, uint8_t &num
  */
 void addNodeName(uint32_t nodeID, char *nodeName)
 {
-	for (int idx = 0; idx < _numOfNodes; idx++)
+	for (int idx = 0; idx < namesListIndex; idx++)
 	{
 		if (namesMap[idx].nodeId == nodeID)
 		{
@@ -314,20 +334,31 @@ void addNodeName(uint32_t nodeID, char *nodeName)
 		}
 	}
 
-	// Find unused names entry
-	int newEntry = 0;
-	for (newEntry = 0; newEntry < _numOfNodes; newEntry++)
+	if (namesListIndex == _numOfNodes)
 	{
-		if (namesMap[newEntry].nodeId == 0)
-		{
-			// Found a empty slot
-			namesMap[newEntry].nodeId = nodeID;
-			snprintf(namesMap[newEntry].name, 17, "%s", nodeName);
-			return;
-		}
+		// Names list is full
+		myLog_e("Names map is already full %d", namesListIndex);
+		return;
 	}
 
-	myLog_e("Names map is already full");
+	namesMap[namesListIndex].nodeId = nodeID;
+	snprintf(namesMap[namesListIndex].name, 17, "%s", nodeName);
+	namesListIndex++;
+	
+	// // Find unused names entry
+	// int newEntry = 0;
+	// for (newEntry = 0; newEntry < _numOfNodes; newEntry++)
+	// {
+	// 	if (namesMap[newEntry].nodeId == 0)
+	// 	{
+	// 		// Found a empty slot
+	// 		namesMap[newEntry].nodeId = nodeID;
+	// 		snprintf(namesMap[newEntry].name, 17, "%s", nodeName);
+	// 		return;
+	// 	}
+	// }
+
+	// myLog_e("Names map is already full %d", _numOfNodes);
 }
 
 /**
@@ -386,6 +417,28 @@ namesList *getNodeNameByIndex(uint8_t index)
 		return &namesMap[index];
 	}
 	return NULL;
+}
+
+/**
+ * Delete node name by node ID
+ * @param nodeId
+ * 		nodeID to be deleted
+ */
+void deleteNodeName(uint32_t nodeId)
+{
+	for (int idx = 0; idx < namesListIndex; idx++)
+	{
+		if (namesMap[idx].nodeId == nodeId)
+		{
+			myLog_e("Found name entry for %08X", nodeId);
+			// Found the node in the list, 
+			// delete it by copying following names on top of it
+			memcpy(&namesMap[idx], &namesMap[idx + 1],
+				   sizeof(namesList) * (_numOfNodes - idx - 1));
+			namesListIndex --;
+			return;
+		}
+	}
 }
 
 extern uint32_t broadcastID;

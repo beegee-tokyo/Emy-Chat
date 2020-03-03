@@ -76,7 +76,7 @@ extern volatile xQueueHandle meshMsgQueue;
 // LoRa definitions
 #define RF_FREQUENCY 910000000  // Hz
 #define TX_OUTPUT_POWER 22		// dBm
-#define LORA_BANDWIDTH 2		// [0: 125 kHz, 1: 250 kHz, 2: 500 kHz, 3: Reserved]
+#define LORA_BANDWIDTH 1		// [0: 125 kHz, 1: 250 kHz, 2: 500 kHz, 3: Reserved]
 #define LORA_SPREADING_FACTOR 7 // [SF7..SF12]
 #define LORA_CODINGRATE 1		// [1: 4/5, 2: 4/6, 3: 4/7, 4: 4/8]
 #define LORA_PREAMBLE_LENGTH 8  // Same for Tx and Rx
@@ -113,6 +113,7 @@ void addNodeName(uint32_t nodeID, char *nodeName);
 char *getNodeName(uint32_t nodeID);
 namesList *getNodeNameByIndex(uint8_t index);
 uint32_t getNodeIdFromName(char *nodeName);
+void deleteNodeName(uint32_t nodeId);
 uint32_t getNextBroadcastID(void);
 bool isOldBroadcast(uint32_t broadcastID);
 

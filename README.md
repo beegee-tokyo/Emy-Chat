@@ -7,6 +7,7 @@ It is inspired by **[DisasterRadio](https://github.com/sudomesh/disaster-radio)*
 - uses my own mesh router (from above mentioned Mesh network)
 - allows addressed messages (seen only by addressed nodes) and broadcasts.    
 - is limited to a maximum of 48 nodes within a Mesh network.
+- detects nodes that disconnect from the Mesh network.
 - This does not claim to work reliable in all scenarios and is only tested with 6 active nodes at a time.    
 - **_This software is written as a proof of concept and can be used as a base for a LoRa Mesh network based chat application_**
 

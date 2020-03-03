@@ -39,7 +39,7 @@ void initBLE(void)
 	Bluefruit.setTxPower(4);
 
 	char serial_str[256] = {0};
-	sprintf(serial_str, "DR-%08lX", deviceID);
+	sprintf(serial_str, "EC-%08lX", deviceID);
 	myLog_d("BLE name %s", serial_str);
 
 	Bluefruit.setName(serial_str);

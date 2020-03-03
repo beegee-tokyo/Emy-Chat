@@ -119,9 +119,9 @@ class DescriptorCallbacks : public BLEDescriptorCallbacks
  */
 void initBLE(void)
 {
-	char apName[] = "DR-xxxxxxxxxxxx";
+	char apName[] = "EC-xxxxxxxxxxxx";
 	// Using ESP32 MAC (48 bytes only, so upper 2 bytes will be 0)
-	sprintf(apName, "DR-%08X", deviceID);
+	sprintf(apName, "EC-%08X", deviceID);
 	myLog_d("Device name: %s", apName);
 
 	// Create mutex for access to RX data buffer

@@ -273,7 +273,7 @@ uint8_t nodeMap(uint8_t nodes[][5])
  */
 uint8_t numOfNodes(void)
 {
-	return nodesMapIndex - 1;
+	return nodesMapIndex;
 	// uint8_t subsNameIndex = 0;
 
 	// for (int idx = 0; idx < _numOfNodes; idx++)
@@ -430,7 +430,7 @@ void deleteNodeName(uint32_t nodeId)
 	{
 		if (namesMap[idx].nodeId == nodeId)
 		{
-			myLog_e("Found name entry for %08X", nodeId);
+			myLog_d("Found name entry for %08X", nodeId);
 			// Found the node in the list, 
 			// delete it by copying following names on top of it
 			memcpy(&namesMap[idx], &namesMap[idx + 1],

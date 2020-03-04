@@ -779,6 +779,7 @@ void OnCadDone(bool cadResult)
 		{
 			myLog_e("CAD returned channel busy %d times, giving up", CAD_RETRY);
 			loraState = MESH_IDLE;
+			channelFreeRetryNum = 0;
 			// Restart listening
 			Radio.Standby();
 			Radio.Rx(0);
@@ -797,6 +798,7 @@ void OnCadDone(bool cadResult)
 	{
 		myLog_d("CAD returned channel free");
 		myLog_d("Sending %d bytes", txLen);
+		channelFreeRetryNum = 0;
 
 		// Send the data package
 		Radio.Standby();

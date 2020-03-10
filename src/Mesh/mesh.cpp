@@ -53,17 +53,19 @@ time_t syncTime = INIT_SYNCTIME;
 
 /**
  * Sleep and Listen time definitions 
+ * Calculated with Semtech SX1261 Calculater
+ * SF 7, BW 250, CR 4/5 PreambleLen 8 PayloadLen 253 Hdr enabled CRC enabled
  * 2 -> number of preambles required to detect package 
- * 1024 -> length of a symbol im ms
+ * 512 -> length of a symbol im ms
  * 1000 -> wake time is in us
  * 15.625 -> SX126x counts in increments of 15.625 us
  * 
  * 10 -> max length we can sleep in symbols 
- * 1024 -> length of a symbol im ms
+ * 512 -> length of a symbol im ms
  * 1000 -> sleep time is in us
  * 15.625 -> SX126x counts in increments of 15.625 us
  */
-#define RX_SLEEP_TIMES 2 * 1024 * 1000 * 15.625, 10 * 1024 * 1000 * 15.625
+#define RX_SLEEP_TIMES 2 * 512 * 1000 * 15.625, 10 * 512 * 1000 * 15.625
 
 typedef enum
 {
@@ -127,18 +129,18 @@ void initMesh(MeshEvents_t *events, int numOfNodes)
 	}
 	memset(nodesMap, 0, _numOfNodes * sizeof(nodesList));
 
-	// Prepare empty names map
-	namesMap = (namesList *)malloc(_numOfNodes * sizeof(namesList));
+	// // Prepare empty names map
+	// namesMap = (namesList *)malloc(_numOfNodes * sizeof(namesList));
 
-	if (namesMap == NULL)
-	{
-		myLog_e("Could not allocate memory for names map");
-	}
-	else
-	{
-		myLog_d("Memory for names map is allocated");
-	}
-	memset(namesMap, 0, _numOfNodes * sizeof(namesList));
+	// if (namesMap == NULL)
+	// {
+	// 	myLog_e("Could not allocate memory for names map");
+	// }
+	// else
+	// {
+	// 	myLog_d("Memory for names map is allocated");
+	// }
+	// memset(namesMap, 0, _numOfNodes * sizeof(namesList));
 
 	// Create queue
 	sendQueue = xQueueCreate(SEND_QUEUE_SIZE, sizeof(uint8_t));
@@ -213,8 +215,8 @@ void meshTask(void *pvParameters)
 	loraState = MESH_IDLE;
 	// Start waiting for data package
 	Radio.Standby();
-
-	Radio.Rx(0);
+	// Radio.Rx(0);
+	Radio.SetRxDutyCycle(RX_SLEEP_TIMES);
 
 	time_t txTimeout = millis();
 
@@ -298,7 +300,9 @@ void meshTask(void *pvParameters)
 		if ((loraState == MESH_TX) && ((millis() - txTimeout) > 7500))
 		{
 			Radio.Standby();
-			Radio.Rx(0);
+			// Radio.Rx(0);
+			Radio.SetRxDutyCycle(RX_SLEEP_TIMES);
+
 			loraState = MESH_IDLE;
 			myLog_e("loraState stuck in TX for 2 seconds");
 		}
@@ -397,8 +401,8 @@ void OnRxDone(uint8_t *rxPayload, uint16_t rxSize, int16_t rxRssi, int8_t rxSnr)
 
 	// Restart listening
 	Radio.Standby();
-	Radio.Rx(0);
-	// Radio.SetRxDutyCycle(RX_SLEEP_TIMES);
+	// Radio.Rx(0);
+	Radio.SetRxDutyCycle(RX_SLEEP_TIMES);
 
 	// Check the received data
 	if ((rxBuffer[0] == 'L') && (rxBuffer[1] == 'o') && (rxBuffer[2] == 'R'))
@@ -659,8 +663,8 @@ void OnTxDone(void)
 
 	// Restart listening
 	Radio.Standby();
-	Radio.Rx(0);
-	// Radio.SetRxDutyCycle(RX_SLEEP_TIMES);
+	// Radio.Rx(0);
+	Radio.SetRxDutyCycle(RX_SLEEP_TIMES);
 }
 
 /**
@@ -669,13 +673,13 @@ void OnTxDone(void)
  */
 void OnTxTimeout(void)
 {
-	myLog_e("LoRa TX timeout");
+	myLog_w("LoRa TX timeout");
 	loraState = MESH_IDLE;
 
 	// Restart listening
 	Radio.Standby();
-	Radio.Rx(0);
-	// Radio.SetRxDutyCycle(RX_SLEEP_TIMES);
+	// Radio.Rx(0);
+	Radio.SetRxDutyCycle(RX_SLEEP_TIMES);
 }
 
 /**
@@ -684,13 +688,13 @@ void OnTxTimeout(void)
  */
 void OnTxTimerTimeout(void)
 {
-	myLog_e("LoRa TX SW timer timeout");
+	myLog_w("LoRa TX SW timer timeout");
 	loraState = MESH_IDLE;
 
 	// Internal timer timeout, maybe some problem with SX126x ???
 	Radio.Standby();
-	Radio.Rx(0);
-	// Radio.SetRxDutyCycle(RX_SLEEP_TIMES);
+	// Radio.Rx(0);
+	Radio.SetRxDutyCycle(RX_SLEEP_TIMES);
 }
 
 /**
@@ -698,7 +702,7 @@ void OnTxTimerTimeout(void)
  */
 void OnRxTimeout(void)
 {
-	myLog_e("LoRa RX timeout");
+	myLog_w("LoRa RX timeout");
 
 	if (loraState != MESH_TX)
 	{
@@ -706,8 +710,8 @@ void OnRxTimeout(void)
 
 		// Restart listening
 		Radio.Standby();
-		Radio.Rx(0);
-		// Radio.SetRxDutyCycle(RX_SLEEP_TIMES);}
+		// Radio.Rx(0);
+		Radio.SetRxDutyCycle(RX_SLEEP_TIMES);
 	}
 }
 
@@ -716,15 +720,15 @@ void OnRxTimeout(void)
  */
 void OnRxTimerTimeout(void)
 {
-	myLog_e("LoRa RX SW timer timeout");
+	myLog_w("LoRa RX SW timer timeout");
 	if (loraState != MESH_TX)
 	{
 		loraState = MESH_IDLE;
 
 		// Internal timer timeout, maybe some problem with SX126x ???
 		Radio.Standby();
-		Radio.Rx(0);
-		// Radio.SetRxDutyCycle(RX_SLEEP_TIMES);}
+		// Radio.Rx(0);
+		Radio.SetRxDutyCycle(RX_SLEEP_TIMES);
 	}
 }
 
@@ -741,8 +745,8 @@ void OnRxError(void)
 
 		// Restart listening
 		Radio.Standby();
-		Radio.Rx(0);
-		// Radio.SetRxDutyCycle(RX_SLEEP_TIMES);
+		// Radio.Rx(0);
+		Radio.SetRxDutyCycle(RX_SLEEP_TIMES);
 	}
 }
 
@@ -782,8 +786,8 @@ void OnCadDone(bool cadResult)
 			channelFreeRetryNum = 0;
 			// Restart listening
 			Radio.Standby();
-			Radio.Rx(0);
-			// Radio.SetRxDutyCycle(RX_SLEEP_TIMES);
+			// Radio.Rx(0);
+			Radio.SetRxDutyCycle(RX_SLEEP_TIMES);
 		}
 		else
 		{

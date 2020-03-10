@@ -82,7 +82,6 @@ class UartTxCbHandler : public BLECharacteristicCallbacks
 		rxLen = rxValue.size();
 
 		xSemaphoreTake(_mutex, portMAX_DELAY);
-		// if ((rxLen > 0) && (dataRcvd == false))
 		if (rxLen > 0)
 		{
 			strncpy((char *)rxData, rxValue.c_str(), 253);

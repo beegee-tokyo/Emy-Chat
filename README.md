@@ -61,7 +61,7 @@ Other defines used in the code, but setup by the PlatformIO packages
   - Set for nRF52 boards
 
 ## Android app for BLE connection
-The Android app to connect to an Emy-Chat node is ready, but not yet published in Google Play or F-Droid. For now the source codes are in my [Emy-Chat-Android](https://github.com/beegee-tokyo/Emy-Chat-Android) repo.    
+The Android app to connect to an Emy-Chat node is ready, but not yet and published in [Google Play](https://play.google.com/store/apps/details?id=tk.giesecke.emy_chat). F-Droid will be added sometime. The source codes are in my [Emy-Chat-Android](https://github.com/beegee-tokyo/Emy-Chat-Android) repo.    
 
 ## Library Dependencies
 #### [SX126x-Arduino](https://github.com/beegee-tokyo/SX126x-Arduino)

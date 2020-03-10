@@ -234,9 +234,6 @@ void handleLoraData(void)
 		addNodeName(loraSenderID, tempName);
 		// Send name of node to the BLE app
 		sendBleData(loraSenderID, NAME_TYPE, &loraRX[1], loraDataSize - 1);
-		// Announce name on Console
-		/// \todo Annoying because that happens every time the mesh reorganize itself
-		// Serial.printf("[INFO] Node %08X set his nickname to %s\n", loraSenderID, tempName);
 		break;
 	}
 }

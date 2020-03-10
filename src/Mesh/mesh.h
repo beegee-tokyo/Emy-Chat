@@ -94,12 +94,6 @@ struct nodesList
 	uint8_t numHops;
 };
 
-struct namesList
-{
-	uint32_t nodeId;
-	char name[17];
-};
-
 bool getRoute(uint32_t id, nodesList *route);
 boolean addNode(uint32_t id, uint32_t hop, uint8_t numHops);
 void removeNode(uint32_t id);
@@ -109,15 +103,9 @@ uint8_t nodeMap(uint32_t subs[], uint8_t hops[]);
 uint8_t nodeMap(uint8_t nodes[][5]);
 uint8_t numOfNodes();
 bool getNode(uint8_t nodeNum, uint32_t &nodeId, uint32_t &firstHop, uint8_t &numHops);
-void addNodeName(uint32_t nodeID, char *nodeName);
-char *getNodeName(uint32_t nodeID);
-namesList *getNodeNameByIndex(uint8_t index);
-uint32_t getNodeIdFromName(char *nodeName);
-void deleteNodeName(uint32_t nodeId);
 uint32_t getNextBroadcastID(void);
 bool isOldBroadcast(uint32_t broadcastID);
 
 extern SemaphoreHandle_t accessNodeList;
 extern nodesList *nodesMap;
 extern int _numOfNodes;
-extern namesList *namesMap;

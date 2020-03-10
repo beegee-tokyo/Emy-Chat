@@ -76,4 +76,7 @@ struct localMsg
 };
 
 // Configuration
-#include <Config/config.h>
+#include <EmyChat/config.h>
+
+// Emy node names
+#include <EmyChat/node_names.h>

@@ -106,6 +106,9 @@ void setup()
 	// Initialize BLE
 	initBLE();
 
+	// Initialize the mesh node name list
+	initNodeNames();
+
 	// Initialize the LoRa
 	if (!initLoRa())
 	{

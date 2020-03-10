@@ -38,7 +38,7 @@ void handleConsoleData(void)
 		}
 		else if ((command == "join" || command == "nick") && argIndex >= 1)
 		{
-			String msg; // = userName[0] != 0 ? String("~ ") + String(userName) + " is now known as " + args[1] : String("~ ") + args[1] + " joined the channel";
+			String msg;
 			if (userName[0] == 0)
 			{
 				msg = "~ " + args[1] + " joined the channel";
@@ -148,21 +148,6 @@ void sendConsoleData(uint32_t receiver, uint8_t type, char *data, size_t len)
 	switch (type)
 	{
 	case CHAT_TYPE:
-	/// \todo Do we want to show that this is a direct message?
-		// if (data[0] == '@')
-		// {
-		// 	// Remove the @ tag
-		// 	int txtStart;
-		// 	for (txtStart = 0; txtStart < len; txtStart++)
-		// 	{
-		// 		if (data[txtStart] == 0x20)
-		// 		{
-		// 			break;
-		// 		}
-		// 	}
-		// 	memcpy(data, &data[txtStart + 1], len);
-		// }
-
 		if (getNodeName(receiver) != NULL)
 		{
 			snprintf(consoleOut, 512, "<%s>%s\n", getNodeName(receiver), data);

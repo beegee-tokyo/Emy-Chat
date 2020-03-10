@@ -33,30 +33,6 @@ TaskHandle_t displayHandler = NULL;
 void initDisplay(void)
 {
 	myLog_d("Display init");
-	// byte error;
-	// boolean foundDisplay = false;
-// 	Wire.begin();
-// 	Wire.setClock(100000);
-// 	for (byte address = 0x01; address < 0x128; address++)
-// 	{
-// 		Wire.beginTransmission(address);
-// 		error = Wire.endTransmission();
-// 		if (error == 0)
-// 		{
-// 			Serial.printf("Found device on addr %0X\n", address);
-// 			if (address == 0x3C)
-// 			{
-// 				foundDisplay = true;
-// 			}
-// 		}
-// 	}
-// #ifdef NRF52
-// 	Wire.end();
-// #endif
-	// if (!foundDisplay)
-	// {
-	// 	myLog_e("No display found");
-	// }
 	display.init();
 	display.displayOn();
 	display.flipScreenVertically();

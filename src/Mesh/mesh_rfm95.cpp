@@ -53,6 +53,10 @@ uint8_t txPckg[256];
 uint16_t txLen = 0;
 /** LoRa RX buffer */
 uint8_t rxBuffer[256];
+/** Size of data package */
+uint16_t rxSize = 0;
+/** Result of read package */
+int state = ERR_NONE;
 
 /** Sync time for routing at start */
 #define INIT_SYNCTIME 30000
@@ -77,8 +81,8 @@ meshRadioState_t loraState = MESH_IDLE;
 /** Mesh callback variable */
 static MeshEvents_t *_MeshEvents;
 
-/** Lora OnReceive callback */
-void OnReceive(void);
+/** Lora interrupt callback */
+void OnLoRaIRQ(void);
 
 /** Read data from LoRa module */
 void receiveData(void);
@@ -91,6 +95,8 @@ boolean nodesChanged = false;
 
 /** Flag if RFM95 module has data */
 boolean hasData = false;
+/** Flag if RFM95 module has finished transmission */
+boolean txFinished = false;
 
 /**
  * Initialize the Mesh network
@@ -118,19 +124,6 @@ void initMesh(MeshEvents_t *events, int numOfNodes)
 	}
 	memset(nodesMap, 0, _numOfNodes * sizeof(nodesList));
 
-	// Prepare empty names map
-	namesMap = (namesList *)malloc(_numOfNodes * sizeof(namesList));
-
-	if (namesMap == NULL)
-	{
-		myLog_e("Could not allocate memory for names map");
-	}
-	else
-	{
-		myLog_d("Memory for names map is allocated");
-	}
-	memset(namesMap, 0, _numOfNodes * sizeof(namesList));
-
 	// Create queue
 	sendQueue = xQueueCreate(SEND_QUEUE_SIZE, sizeof(uint8_t));
 	if (sendQueue == NULL)
@@ -149,7 +142,7 @@ void initMesh(MeshEvents_t *events, int numOfNodes)
 	broadcastID = deviceID & 0xFFFFFF00;
 	myLog_d("Broadcast ID is %08X", broadcastID);
 
-	int state = lora.begin();
+	state = lora.begin();
 	if (state == ERR_NONE)
 	{
 		myLog_d("Lora init success!");
@@ -168,12 +161,12 @@ void initMesh(MeshEvents_t *events, int numOfNodes)
 		bw = LORA_BANDWIDTH * 250.0F;
 	}
 	lora.setBandwidth(bw); // How to calculate from LORA_BANDWIDTH [0: 125 kHz, 1: 250 kHz, 2: 500 kHz, 3: Reserved]
-	lora.setCodingRate(LORA_CODINGRATE+4);
+	lora.setCodingRate(LORA_CODINGRATE + 4);
 	lora.setPreambleLength(LORA_PREAMBLE_LENGTH);
 	lora.setSpreadingFactor(LORA_SPREADING_FACTOR);
-	lora.setCRC(true);
+	lora.setCRC(false);
 
-	lora.setDio0Action(OnReceive);
+	lora.setDio0Action(OnLoRaIRQ);
 
 	// Create message queue for LoRa
 	meshMsgQueue = xQueueCreate(10, sizeof(uint8_t));
@@ -207,18 +200,26 @@ void meshTask(void *pvParameters)
 	uint8_t queueIndex;
 
 	time_t notifyTimer = millis() + syncTime;
-	// time_t cleanTimer = millis();
 	time_t checkSwitchSyncTime = millis();
 
 	loraState = MESH_IDLE;
 	// Start waiting for data package
 	lora.standby();
 	lora.startReceive();
+	loraState = MESH_RX;
 
 	time_t txTimeout = millis();
 
 	while (1)
 	{
+		if (txFinished)
+		{
+			myLog_d("TX finished");
+			txFinished = false;
+			lora.standby();
+			lora.startReceive();
+			loraState = MESH_RX;
+		}
 		if (hasData)
 		{
 			receiveData();
@@ -234,7 +235,7 @@ void meshTask(void *pvParameters)
 			}
 		}
 		// Time to sync the Mesh ???
-		if ((millis() - notifyTimer) >= syncTime)
+		if (((millis() - notifyTimer) >= syncTime) && (loraState == MESH_RX))
 		{
 			if (xSemaphoreTake(accessNodeList, (TickType_t)1000) == pdTRUE)
 			{
@@ -302,7 +303,8 @@ void meshTask(void *pvParameters)
 		{
 			lora.standby();
 			lora.startReceive();
-			loraState = MESH_IDLE;
+			loraState = MESH_RX;
+			txFinished = false;
 			myLog_e("loraState stuck in TX for 2 seconds");
 		}
 
@@ -311,15 +313,6 @@ void meshTask(void *pvParameters)
 		{
 			if (loraState != MESH_TX)
 			{
-// #ifdef ESP32
-// 				portENTER_CRITICAL(&accessMsgQueue);
-// #else
-// 				taskENTER_CRITICAL();
-// #endif
-// 				txLen = sendMsgSize[queueIndex];
-// 				memset(txPckg, 0, 256);
-// 				memcpy(txPckg, &sendMsg[queueIndex].mark1, txLen);
-
 				// Check if the channel is free
 				boolean channelAvailable = true;
 				time_t cadTimeout = millis();
@@ -331,7 +324,7 @@ void meshTask(void *pvParameters)
 						channelAvailable = false;
 					}
 				}
-				
+
 				if (channelAvailable && (xQueueReceive(sendQueue, &queueIndex, portMAX_DELAY) == pdTRUE))
 				{
 #ifdef ESP32
@@ -353,20 +346,9 @@ void meshTask(void *pvParameters)
 					myLog_d("Sending msg #%d with len %d", queueIndex, txLen);
 
 					loraState = MESH_TX;
-
-					lora.transmit(txPckg, txLen);
-					lora.standby();
-					lora.startReceive();
-					loraState = MESH_IDLE;
+					txFinished = false;
+					lora.startTransmit(txPckg, txLen);
 				}
-// 				else
-// 				{
-// #ifdef ESP32
-// 					portEXIT_CRITICAL(&accessMsgQueue);
-// #else
-// 					taskEXIT_CRITICAL();
-// #endif
-// 				}
 			}
 		}
 
@@ -376,18 +358,23 @@ void meshTask(void *pvParameters)
 }
 
 /**
- * Callback after a LoRa package was received
- * @param packetSize
- * 			Length of received data
+ * Callback after a LoRa package was or sent
  */
-// void OnReceive(int packetSize)
-void OnReceive(void)
+void OnLoRaIRQ(void)
 {
 	if (!enableInterrupt)
 	{
 		return;
 	}
-	hasData = true;
+
+	if (loraState == MESH_RX)
+	{
+		hasData = true;
+	}
+	else
+	{
+		txFinished = true;
+	}
 }
 
 /**
@@ -397,18 +384,21 @@ void OnReceive(void)
  */
 void receiveData(void)
 {
+	lora.standby();
+
 	// disable the interrupt service routine while processing the data
 	enableInterrupt = false;
 
 	// Read received data as byte array
-	uint16_t rxSize = lora.getPacketLength(true);
+	rxSize = lora.getPacketLength(true);
 
-	int state = lora.readData(rxBuffer, rxSize);
+	state = lora.readData(rxBuffer, rxSize);
 	if (state != ERR_NONE)
 	{
 		myLog_e("Read data error %d", state);
 		lora.standby();
 		lora.startReceive();
+		loraState = MESH_RX;
 		enableInterrupt = true;
 		return;
 	}
@@ -443,6 +433,7 @@ void receiveData(void)
 	enableInterrupt = true;
 	lora.standby();
 	lora.startReceive();
+	loraState = MESH_RX;
 
 	// Check the received data
 	if ((rxBuffer[0] == 'L') && (rxBuffer[1] == 'o') && (rxBuffer[2] == 'R'))

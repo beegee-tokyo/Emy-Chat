@@ -247,8 +247,7 @@ extern "C"
  * 
  * @remark Before calling this function CAD parameters need to be set first! \
  * 		Use RadioSetCadParams to setup the parameters or directly in the SX126x low level functions
- *      SX126xSetCadParams(LORA_CAD_08_SYMBOL, LORA_SPREADING_FACTOR + 13, 10, LORA_CAD_ONLY, 0); \
- *      SX126xSetDioIrqParams(IRQ_CAD_DONE | IRQ_CAD_ACTIVITY_DETECTED, \
+ *      RadioSetCadParams(uint8_t cadSymbolNum, uint8_t cadDetPeak, uint8_t cadDetMin, uint8_t cadExitMode, uint32_t cadTimeout);
  *              IRQ_CAD_DONE | IRQ_CAD_ACTIVITY_DETECTED, \
  *              IRQ_RADIO_NONE, IRQ_RADIO_NONE); \
  */

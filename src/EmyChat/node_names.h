@@ -6,7 +6,7 @@ struct namesList
 	char name[17];
 };
 
-void initNodeNames(void);
+void initNodeNames(int numOfNames);
 void addNodeName(uint32_t nodeID, char *nodeName);
 char *getNodeName(uint32_t nodeID);
 uint32_t getNodeIdFromName(char *nodeName);

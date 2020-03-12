@@ -15,17 +15,12 @@ char buffer[NUM_OF_LINES][32] = {0};
 /** Current line used */
 uint8_t currentLine = 0;
 
-/** Number of elements in the mesh map */
-extern uint8_t numElements;
-
 /** Singleton of the display class */
 #ifdef NRF52
 SH1106Wire display(0x3c, OLED_SDA, OLED_SCL);
 #else
 SH1106Wire display(0x3c, OLED_SDA, OLED_SCL);
 #endif
-/** Task to control the LEDs */
-TaskHandle_t displayHandler = NULL;
 
 /**
  * Initialize the display

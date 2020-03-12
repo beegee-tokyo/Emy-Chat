@@ -5,10 +5,19 @@ namesList *namesMap;
 /** Index to the first free name entry */
 int namesListIndex = 0;
 
-void initNodeNames(void)
+/** Max number of nodes in the list */
+int _numOfNames = 0;
+
+/**
+ * Initialize list of node names
+ * @param numOfNames
+ * 		max number of node names
+ */
+void initNodeNames(int numOfNames)
 {
+	_numOfNames = numOfNames;
 	// Prepare empty names map
-	namesMap = (namesList *)malloc(_numOfNodes * sizeof(namesList));
+	namesMap = (namesList *)malloc(numOfNames * sizeof(namesList));
 
 	if (namesMap == NULL)
 	{
@@ -18,7 +27,7 @@ void initNodeNames(void)
 	{
 		myLog_d("Memory for names map is allocated");
 	}
-	memset(namesMap, 0, _numOfNodes * sizeof(namesList));
+	memset(namesMap, 0, numOfNames * sizeof(namesList));
 }
 
 /**
@@ -40,7 +49,7 @@ void addNodeName(uint32_t nodeID, char *nodeName)
 		}
 	}
 
-	if (namesListIndex == _numOfNodes)
+	if (namesListIndex == _numOfNames)
 	{
 		// Names list is full
 		myLog_e("Names map is already full %d", namesListIndex);
@@ -61,7 +70,7 @@ void addNodeName(uint32_t nodeID, char *nodeName)
  */
 char *getNodeName(uint32_t nodeID)
 {
-	for (int idx = 0; idx < _numOfNodes; idx++)
+	for (int idx = 0; idx < _numOfNames; idx++)
 	{
 		if (namesMap[idx].nodeId == nodeID)
 		{
@@ -82,7 +91,7 @@ char *getNodeName(uint32_t nodeID)
  */
 uint32_t getNodeIdFromName(char *nodeName)
 {
-	for (int idx = 0; idx < _numOfNodes; idx++)
+	for (int idx = 0; idx < _numOfNames; idx++)
 	{
 		if (strcmp(namesMap[idx].name, nodeName) == 0)
 		{
@@ -125,7 +134,7 @@ void deleteNodeName(uint32_t nodeId)
 			// Found the node in the list,
 			// delete it by copying following names on top of it
 			memcpy(&namesMap[idx], &namesMap[idx + 1],
-				   sizeof(namesList) * (_numOfNodes - idx - 1));
+				   sizeof(namesList) * (_numOfNames - idx - 1));
 			namesListIndex--;
 			return;
 		}

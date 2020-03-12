@@ -84,7 +84,7 @@ static RadioEvents_t RadioEvents;
 /** Mesh callback variable */
 static MeshEvents_t *_MeshEvents;
 
-/** Number of nodes in the map */
+/** Max number of nodes in the map */
 int _numOfNodes = 0;
 
 /** Timeout for RX after Preamble detection */
@@ -128,19 +128,6 @@ void initMesh(MeshEvents_t *events, int numOfNodes)
 		myLog_d("Memory for nodes map is allocated");
 	}
 	memset(nodesMap, 0, _numOfNodes * sizeof(nodesList));
-
-	// // Prepare empty names map
-	// namesMap = (namesList *)malloc(_numOfNodes * sizeof(namesList));
-
-	// if (namesMap == NULL)
-	// {
-	// 	myLog_e("Could not allocate memory for names map");
-	// }
-	// else
-	// {
-	// 	myLog_d("Memory for names map is allocated");
-	// }
-	// memset(namesMap, 0, _numOfNodes * sizeof(namesList));
 
 	// Create queue
 	sendQueue = xQueueCreate(SEND_QUEUE_SIZE, sizeof(uint8_t));
@@ -188,7 +175,7 @@ void initMesh(MeshEvents_t *events, int numOfNodes)
 		myLog_d("LoRa message queue created!");
 	}
 
-	if (!xTaskCreate(meshTask, "MeshSync", 3096, NULL, 1, &meshTaskHandle))
+	if (!xTaskCreate(meshTask, "MeshSync", 4096, NULL, 1, &meshTaskHandle))
 	{
 		myLog_e("Starting Mesh Sync Task failed");
 	}
@@ -250,7 +237,7 @@ void meshTask(void *pvParameters)
 				myLog_d("Sending mesh map");
 				syncMsg.from = deviceID;
 				syncMsg.type = LORA_NODEMAP;
-				memset(syncMsg.nodes, 0, 48 * 5);
+				memset(syncMsg.nodes, 0, _numOfNodes * 5);
 
 				// Get sub nodes
 				uint8_t subsLen = nodeMap(syncMsg.nodes);

@@ -128,6 +128,10 @@ uint8_t numElements;
 bool initLoRa(void)
 {
 	bool initResult = true;
+
+	// Initialize the mesh node name list
+	initNodeNames(MAX_NODES);
+
 #ifdef USE_RFM95
 ////////////////////////////
 // Initialization for RFM95
@@ -172,9 +176,9 @@ bool initLoRa(void)
 	// Initialize the LoRa Mesh
 	// * events, number of nodes, frequency, TX power
 #ifdef ESP32
-	initMesh(&MeshEvents, 48);
+	initMesh(&MeshEvents, MAX_NODES);
 #else
-	initMesh(&MeshEvents, 30);
+	initMesh(&MeshEvents, MAX_NODES);
 #endif
 	return initResult;
 }
